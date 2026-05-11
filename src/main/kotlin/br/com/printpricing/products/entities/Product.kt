@@ -1,5 +1,6 @@
 package br.com.printpricing.products.entities
 
+import br.com.printpricing.categories.entities.Category
 import br.com.printpricing.pricing.entities.PricingSimulation
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -7,6 +8,9 @@ import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
@@ -40,6 +44,14 @@ class Product(
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
     var pricingSimulations: MutableList<PricingSimulation> = mutableListOf(),
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "product_categories",
+        joinColumns = [JoinColumn(name = "product_id")],
+        inverseJoinColumns = [JoinColumn(name = "category_id")]
+    )
+    var categories: MutableSet<Category> = mutableSetOf(),
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

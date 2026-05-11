@@ -69,6 +69,7 @@ No botao `Authorize`, cole somente o token JWT (sem prefixo `Bearer `).
 ## Estrutura de modulos
 - `users`: cadastro/login e dados do usuario autenticado
 - `roles`: gerenciamento de perfis de acesso
+- `categories`: categorias de produto e associacao com products
 - `products`: produto fisico precificavel
 - `printers`: dados tecnicos e custo de maquina
 - `materials`: filamentos
@@ -147,6 +148,12 @@ Resposta:
 }
 ```
 
+Associar categoria ao produto:
+- `PUT /api/products/{productId}/categories/{categoryId}`
+
+Desassociar categoria do produto:
+- `DELETE /api/products/{productId}/categories/{categoryId}`
+
 ### 4) Printer (USER ou ADMIN)
 `POST /api/printers`
 ```json
@@ -177,6 +184,15 @@ Resposta:
 {
   "name": "Embalagem kraft",
   "unitCost": 2.5
+}
+```
+
+### 6.1) Categoria (USER ou ADMIN para escrita, DELETE apenas ADMIN)
+`POST /api/categories`
+```json
+{
+  "name": "Decoracao",
+  "description": "Produtos decorativos"
 }
 ```
 
@@ -278,10 +294,19 @@ Campos relevantes no retorno de custos:
 
 ### Products (USER/ADMIN para escrita)
 - `POST /api/products`
-- `GET /api/products`
+- `GET /api/products?name={texto}&categoryId={id}&sortBy=name|sku|createdAt&direction=ASC|DESC`
 - `GET /api/products/{id}`
 - `PUT /api/products/{id}`
 - `DELETE /api/products/{id}`
+- `PUT /api/products/{productId}/categories/{categoryId}`
+- `DELETE /api/products/{productId}/categories/{categoryId}`
+
+### Categories
+- `POST /api/categories` (USER/ADMIN)
+- `GET /api/categories` (autenticado)
+- `GET /api/categories/{id}` (autenticado)
+- `PUT /api/categories/{id}` (USER/ADMIN)
+- `DELETE /api/categories/{id}` (ADMIN)
 
 ### Printers (USER/ADMIN para escrita)
 - `POST /api/printers`

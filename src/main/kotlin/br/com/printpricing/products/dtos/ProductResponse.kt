@@ -10,7 +10,8 @@ data class ProductResponse(
     val description: String,
     val stlFileUrl: String?,
     val defaultWeightGrams: BigDecimal,
-    val defaultPrintMinutes: Int
+    val defaultPrintMinutes: Int,
+    val categories: List<CategorySummaryResponse>
 ) {
     constructor(product: Product) : this(
         id = product.id,
@@ -19,6 +20,14 @@ data class ProductResponse(
         description = product.description,
         stlFileUrl = product.stlFileUrl,
         defaultWeightGrams = product.defaultWeightGrams,
-        defaultPrintMinutes = product.defaultPrintMinutes
+        defaultPrintMinutes = product.defaultPrintMinutes,
+        categories = product.categories
+            .mapNotNull { category -> category.id?.let { CategorySummaryResponse(it, category.name) } }
+            .sortedBy { it.name }
     )
 }
+
+data class CategorySummaryResponse(
+    val id: Long,
+    val name: String
+)

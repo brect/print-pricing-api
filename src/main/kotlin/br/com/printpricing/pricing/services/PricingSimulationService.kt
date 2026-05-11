@@ -22,6 +22,7 @@ import br.com.printpricing.pricing.entities.PricingSimulationMarketplaceResult
 import br.com.printpricing.pricing.repositories.PricingSimulationRepository
 import br.com.printpricing.printers.repositories.PrinterRepository
 import br.com.printpricing.products.repositories.ProductRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -39,6 +40,8 @@ class PricingSimulationService(
     private val marketplaceRepository: MarketplaceRepository,
     private val simulationRepository: PricingSimulationRepository
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @Transactional
     fun simulate(request: CreatePricingSimulationRequest): PricingSimulationResponse {
         val product = productRepository.findById(request.productId)
@@ -151,13 +154,19 @@ class PricingSimulationService(
             )
         }.toMutableList()
 
-        return simulationRepository.saveAndFlush(simulation).toResponse()
+        val saved = simulationRepository.saveAndFlush(simulation)
+        log.info(
+            "Simulacao criada id={} productId={} printerId={} materialId={} totalCost={} consumerPrice={}",
+            saved.id, saved.product.id, saved.printer.id, saved.material.id, saved.totalCost, saved.consumerPrice
+        )
+        return saved.toResponse()
     }
 
     @Transactional(readOnly = true)
     fun findById(id: Long): PricingSimulationResponse =
         simulationRepository.findById(id)
             .orElseThrow { ResourceNotFoundException("Simulacao de precificacao", id) }
+            .also { log.info("Simulacao consultada id={}", id) }
             .toResponse()
 
     @Transactional(readOnly = true)

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -32,9 +33,14 @@ class ProductController(private val service: ProductService) {
             .let { ResponseEntity.status(HttpStatus.CREATED).body(it) }
 
     @GetMapping
-    @Operation(summary = "Listar produtos")
-    fun list(): ResponseEntity<List<ProductResponse>> =
-        service.findAll().map { ProductResponse(it) }.let { ResponseEntity.ok(it) }
+    @Operation(summary = "Listar produtos com filtro e ordenacao")
+    fun list(
+        @RequestParam(required = false) name: String?,
+        @RequestParam(required = false) categoryId: Long?,
+        @RequestParam(defaultValue = "name") sortBy: String,
+        @RequestParam(defaultValue = "ASC") direction: String
+    ): ResponseEntity<List<ProductResponse>> =
+        service.findAll(name, categoryId, sortBy, direction).map { ProductResponse(it) }.let { ResponseEntity.ok(it) }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar produto por ID")
@@ -56,4 +62,22 @@ class ProductController(private val service: ProductService) {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     fun delete(@PathVariable id: Long): ResponseEntity<Void> =
         service.delete(id).let { ResponseEntity.noContent().build() }
+
+    @PutMapping("/{productId}/categories/{categoryId}")
+    @Operation(summary = "Associar categoria ao produto")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    fun addCategory(
+        @PathVariable productId: Long,
+        @PathVariable categoryId: Long
+    ): ResponseEntity<ProductResponse> =
+        service.addCategory(productId, categoryId).let { ProductResponse(it) }.let { ResponseEntity.ok(it) }
+
+    @DeleteMapping("/{productId}/categories/{categoryId}")
+    @Operation(summary = "Desassociar categoria do produto")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    fun removeCategory(
+        @PathVariable productId: Long,
+        @PathVariable categoryId: Long
+    ): ResponseEntity<ProductResponse> =
+        service.removeCategory(productId, categoryId).let { ProductResponse(it) }.let { ResponseEntity.ok(it) }
 }
