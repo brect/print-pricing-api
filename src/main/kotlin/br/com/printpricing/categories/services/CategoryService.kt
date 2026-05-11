@@ -4,12 +4,16 @@ import br.com.printpricing.categories.entities.Category
 import br.com.printpricing.categories.repositories.CategoryRepository
 import br.com.printpricing.exceptions.ConflictException
 import br.com.printpricing.exceptions.ResourceNotFoundException
+import br.com.printpricing.products.repositories.ProductRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class CategoryService(private val repository: CategoryRepository) {
+class CategoryService(
+    private val repository: CategoryRepository,
+    private val productRepository: ProductRepository
+) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun create(payload: Category): Category {
@@ -39,6 +43,8 @@ class CategoryService(private val repository: CategoryRepository) {
     @Transactional
     fun delete(id: Long) {
         val current = findById(id)
+        productRepository.removeCategoryLinks(id)
+
         repository.delete(current)
         log.info("Categoria removida id={}", id)
     }
