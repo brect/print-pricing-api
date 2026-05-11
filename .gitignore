@@ -1,0 +1,15 @@
+.gradle/
+build/
+out/
+
+.idea/
+*.iml
+.vscode/
+
+logs/
+*.log
+
+.env
+.DS_Store
+
+src/main/resources/application-local.yaml

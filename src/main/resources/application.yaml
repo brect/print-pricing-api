@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: print-pricing-api
+  datasource:
+    url: jdbc:h2:mem:printpricing
+    username: sa
+    password: sa
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: true
+  web:
+    error:
+      whitelabel:
+        enabled: false
+      include-message: always
+      include-binding-errors: always
+
+server:
+  servlet:
+    context-path: /api
+
+springdoc:
+  swagger-ui:
+    use-root-path: true
+
+security:
+  jwt:
+    issuer: print-pricing-api
+    secret: print-pricing-secret-key-change-in-production-32chars
