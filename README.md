@@ -1,5 +1,8 @@
 # Print Pricing API
 
+Autor: Bruno de Lima Silva  
+Video apresentacao: https://youtu.be/59hWdaA7l4g
+
 API REST em Kotlin + Spring Boot para precificacao de produtos feitos com impressao 3D.
 
 Objetivo principal:
