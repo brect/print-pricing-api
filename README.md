@@ -2,6 +2,7 @@
 
 Autor: Bruno de Lima Silva  
 Video apresentacao (Desenvolvimento de Backend - Print Pricing API): https://youtu.be/59hWdaA7l4g
+
 Video apresentação (Serviços Mobile em Cloud AWS - Print Pricing API): https://youtu.be/vfI3Z0b-FqU
 
 API REST em Kotlin + Spring Boot para precificacao de produtos feitos com impressao 3D.
