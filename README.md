@@ -1,7 +1,8 @@
 # Print Pricing API
 
 Autor: Bruno de Lima Silva  
-Video apresentacao: https://youtu.be/59hWdaA7l4g
+Video apresentacao (Desenvolvimento de Backend - Print Pricing API): https://youtu.be/59hWdaA7l4g
+Video apresentação (Serviços Mobile em Cloud AWS - Print Pricing API): https://youtu.be/vfI3Z0b-FqU
 
 API REST em Kotlin + Spring Boot para precificacao de produtos feitos com impressao 3D.
 
@@ -36,17 +37,47 @@ cd /Users/brlimas/Documents/Projetos/backend/print-pricing-api
 - OpenAPI JSON: `http://localhost:8080/api/v3/api-docs`
 - H2 Console: `http://localhost:8080/api/h2-console`
 
+### 4) Roteiro de demonstracao
+Demo apenas ADMIN:
+```bash
+/usr/bin/env bash /Users/brlimas/Documents/Projetos/backend/print-pricing-api/demo-admin.sh
+```
+
+Demo apenas USER:
+```bash
+/usr/bin/env bash /Users/brlimas/Documents/Projetos/backend/print-pricing-api/demo-user.sh
+```
+
+Demo completa:
+```bash
+/usr/bin/env bash /Users/brlimas/Documents/Projetos/backend/print-pricing-api/demo-presentation.sh
+```
+
+Durante a demo USER, o script pede dois codigos exibidos no log da aplicacao:
+- primeiro codigo: confirma um usuario novo por telefone e uuid;
+- segundo codigo: confirma a troca de uuid para o mesmo telefone.
+
+Procure no console da aplicacao a linha `SMS de confirmacao para telefone ...`.
+
 ## Autenticacao e autorizacao
 A API usa JWT Bearer Token.
 
 Fluxo:
-1. criar usuario (`POST /api/users`) ou usar admin bootstrap;
-2. autenticar em `POST /api/users/login`;
-3. enviar `Authorization: Bearer <token>` nas rotas protegidas.
+1. autenticar em `POST /api/users/login` informando telefone e uuid do aparelho;
+2. se o telefone/uuid ainda nao estiver confirmado, a API retorna `202` e envia um codigo por SMS;
+3. confirmar em `POST /api/users/confirm` informando telefone, uuid e codigo;
+4. autenticar novamente em `POST /api/users/login`;
+5. enviar `Authorization: Bearer <token>` nas rotas protegidas.
 
 Usuario bootstrap (criado automaticamente):
 - email: `admin@authserver.com`
-- senha: `admin`
+- telefone: `+5500000000000`
+- uuid: `admin-device`
+
+Observacao para ambiente local:
+- o envio de SMS esta simulado;
+- o codigo de confirmacao aparece no log da aplicacao com a mensagem `SMS de confirmacao`.
+- o codigo de confirmacao expira em 5 minutos por padrao.
 
 Regras de token:
 - `USER`: expira em 48 horas
@@ -67,6 +98,7 @@ No botao `Authorize`, cole somente o token JWT (sem prefixo `Bearer `).
 - rotas publicas:
   - `POST /api/users`
   - `POST /api/users/login`
+  - `POST /api/users/confirm`
   - Swagger/OpenAPI e H2 Console
 
 ## Estrutura de modulos
@@ -118,28 +150,76 @@ Legenda:
 }
 ```
 
-### 2) Login
+### 2) Login por telefone
 `POST /api/users/login`
 ```json
 {
-  "email": "user@example.com",
-  "password": "Senha@123"
+  "phone": "+5511999999999",
+  "uuid": "device-123"
 }
 ```
-Resposta:
+
+Se o telefone e uuid ainda nao estiverem confirmados, a API retorna `202 Accepted`:
+```json
+{
+  "status": "CONFIRMATION_REQUIRED",
+  "message": "Codigo de confirmacao enviado por SMS"
+}
+```
+
+### 3) Confirmar telefone e uuid
+`POST /api/users/confirm`
+```json
+{
+  "phone": "+5511999999999",
+  "uuid": "device-123",
+  "code": "123456"
+}
+```
+
+Depois da confirmacao, chame novamente `POST /api/users/login`.
+
+Se o codigo estiver expirado, a API remove o codigo antigo e retorna erro `400`.
+
+Resposta de login confirmado:
 ```json
 {
   "token": "<jwt>",
   "user": {
     "id": 2,
-    "email": "user@example.com",
-    "name": "Usuario Teste",
+    "email": null,
+    "phone": "+5511999999999",
+    "name": "Usuário Desconhecido",
+    "description": null,
+    "active": true,
     "roles": ["USER"]
   }
 }
 ```
 
-### 3) Product (USER ou ADMIN)
+### 4) Atualizar dados do usuario
+`PUT /api/users/{id}`
+```json
+{
+  "email": "user@example.com",
+  "name": "Usuario Teste",
+  "description": "Cliente que usa login por telefone"
+}
+```
+Resposta:
+```json
+{
+  "id": 2,
+  "email": "user@example.com",
+  "phone": "+5511999999999",
+  "name": "Usuario Teste",
+  "description": "Cliente que usa login por telefone",
+  "active": true,
+  "roles": ["USER"]
+}
+```
+
+### 5) Product (USER ou ADMIN)
 `POST /api/products`
 ```json
 {

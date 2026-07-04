@@ -1,14 +1,14 @@
 package br.com.printpricing.users.services
 
 import br.com.printpricing.users.dtos.CreateUserRequest
-import br.com.printpricing.users.dtos.LoginRequest
+import br.com.printpricing.users.dtos.UpdateUserRequest
 import br.com.printpricing.users.dtos.UserResponse
 import br.com.printpricing.exceptions.ConflictException
 import br.com.printpricing.exceptions.ResourceNotFoundException
 import br.com.printpricing.roles.services.RoleService
 import br.com.printpricing.users.entities.User
+import br.com.printpricing.users.mappers.UserMapper
 import br.com.printpricing.users.repositories.UserRepository
-import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional
 class UserService(
     private val repository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val mapper: UserMapper
 ) {
     @Transactional
     fun create(request: CreateUserRequest): UserResponse {
@@ -33,33 +34,15 @@ class UserService(
                     "Falha ao gerar hash da senha"
                 },
                 name = request.name.trim(),
+                active = true,
                 roles = mutableSetOf(userRole)
             )
         )
 
-        return user.toUserResponse()
+        return mapper.toResponse(user)
     }
 
-    @Transactional(readOnly = true)
-    fun authenticate(request: LoginRequest): User {
-        val user = repository.findByEmailIgnoreCase(request.email.trim())
-            .orElseThrow { BadCredentialsException("Credenciais invalidas") }
-
-        if (!passwordEncoder.matches(request.password, user.password)) {
-            throw BadCredentialsException("Credenciais invalidas")
-        }
-
-        return user
-    }
-
-    private fun User.toUserResponse() = UserResponse(
-        id = id,
-        email = email,
-        name = name,
-        roles = roles.map { it.name }.toSortedSet()
-    )
-
-    fun toResponse(user: User): UserResponse = user.toUserResponse()
+    fun toResponse(user: User): UserResponse = mapper.toResponse(user)
 
     @Transactional
     fun addRole(userId: Long, roleName: String): UserResponse {
@@ -68,6 +51,25 @@ class UserService(
 
         val role = roleService.ensureExists(roleName)
         user.roles.add(role)
-        return repository.save(user).toUserResponse()
+        return mapper.toResponse(repository.save(user))
+    }
+
+    @Transactional
+    fun update(userId: Long, request: UpdateUserRequest): UserResponse {
+        val user = repository.findById(userId)
+            .orElseThrow { ResourceNotFoundException("Usuario", userId) }
+
+        request.email?.trim()?.lowercase()?.takeIf { it.isNotBlank() }?.let { email ->
+            repository.findByEmailIgnoreCase(email).ifPresent { existing ->
+                if (existing.id != user.id) {
+                    throw ConflictException("Ja existe usuario com este e-mail")
+                }
+            }
+            user.email = email
+        }
+        request.name?.trim()?.takeIf { it.isNotBlank() }?.let { user.name = it }
+        request.description?.let { user.description = it.trim().ifBlank { null } }
+
+        return mapper.toResponse(repository.save(user))
     }
 }
