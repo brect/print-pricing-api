@@ -3,8 +3,7 @@ package br.com.printpricing.users.controllers
 import br.com.printpricing.security.Jwt
 import br.com.printpricing.security.UserToken
 import br.com.printpricing.users.dtos.CreateUserRequest
-import br.com.printpricing.users.dtos.LoginRequest
-import br.com.printpricing.users.dtos.LoginResponse
+import br.com.printpricing.users.dtos.UpdateUserRequest
 import br.com.printpricing.users.dtos.UserResponse
 import br.com.printpricing.users.services.UserService
 import io.swagger.v3.oas.annotations.Operation
@@ -34,19 +33,17 @@ class UserController(
     fun create(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserResponse> =
         ResponseEntity.status(HttpStatus.CREATED).body(service.create(request))
 
-    @PostMapping("/login")
-    @Operation(summary = "Realizar login e retornar JWT")
-    fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<LoginResponse> {
-        val user = service.authenticate(request)
-        val token = jwt.create(UserToken(user))
-        return ResponseEntity.ok(LoginResponse(token = token, user = service.toResponse(user)))
-    }
-
     @GetMapping("/me")
     @Operation(summary = "Retorna o usuario autenticado", security = [SecurityRequirement(name = "jwt-auth")])
     fun me(): ResponseEntity<UserToken> =
         jwt.authenticatedUser()?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar dados do usuario", security = [SecurityRequirement(name = "jwt-auth")])
+    @PreAuthorize("hasRole('ADMIN') or principal.id == #id")
+    fun update(@PathVariable id: Long, @Valid @RequestBody request: UpdateUserRequest): ResponseEntity<UserResponse> =
+        service.update(id, request).let { ResponseEntity.ok(it) }
 
     @PutMapping("/{id}/roles/{role}")
     @Operation(summary = "Adicionar role ao usuario", security = [SecurityRequirement(name = "jwt-auth")])

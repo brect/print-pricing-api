@@ -2,9 +2,11 @@ package br.com.printpricing.users.dtos
 
 import jakarta.validation.constraints.NotBlank
 
-data class LoginRequest(
+data class ConfirmUserRequest(
     @field:NotBlank
     val phone: String,
     @field:NotBlank
-    val uuid: String
+    val uuid: String,
+    @field:NotBlank
+    val code: String
 )

@@ -22,14 +22,26 @@ class User(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
-    @Column(nullable = false, unique = true)
-    var email: String,
+    @Column(unique = true)
+    var email: String? = null,
 
-    @Column(nullable = false)
-    var password: String,
+    @Column
+    var password: String? = null,
+
+    @Column(unique = true)
+    var phone: String? = null,
+
+    @Column(name = "device_uuid")
+    var deviceUuid: String? = null,
 
     @Column(nullable = false)
     var name: String,
+
+    @Column(columnDefinition = "TEXT")
+    var description: String? = null,
+
+    @Column(nullable = false)
+    var active: Boolean = true,
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

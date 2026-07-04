@@ -104,18 +104,23 @@ class Bootstrapper {
             )
         }
 
-        if (!users.existsByEmailIgnoreCase("admin@authserver.com")) {
-            users.save(
+        val admin = users.findByEmailIgnoreCase("admin@authserver.com")
+            .orElseGet {
                 User(
                     email = "admin@authserver.com",
                     password = requireNotNull(passwordEncoder.encode("admin")) {
                         "Falha ao gerar hash da senha admin"
                     },
-                    name = "Administrador",
-                    roles = mutableSetOf(adminRole, userRole)
+                    name = "Administrador"
                 )
-            )
-        }
+            }
+
+        admin.phone = "+5511964100140"
+        admin.deviceUuid = "admin-device"
+        admin.active = true
+        admin.roles.add(adminRole)
+        admin.roles.add(userRole)
+        users.save(admin)
     }
 
     private fun marketplace(name: String, percentage: BigDecimal): Marketplace =

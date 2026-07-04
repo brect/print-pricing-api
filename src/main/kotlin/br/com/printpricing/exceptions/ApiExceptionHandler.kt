@@ -7,9 +7,12 @@ import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.slf4j.LoggerFactory
 
 @RestControllerAdvice
 class ApiExceptionHandler {
+    private val logger = LoggerFactory.getLogger(ApiExceptionHandler::class.java)
+
     @ExceptionHandler(DomainException::class)
     fun domain(ex: DomainException, request: HttpServletRequest): ResponseEntity<ApiError> =
         ResponseEntity.status(ex.status).body(
@@ -53,8 +56,9 @@ class ApiExceptionHandler {
     }
 
     @ExceptionHandler(Exception::class)
-    fun unexpected(ex: Exception, request: HttpServletRequest): ResponseEntity<ApiError> =
-        ResponseEntity.internalServerError().body(
+    fun unexpected(ex: Exception, request: HttpServletRequest): ResponseEntity<ApiError> {
+        logger.error("Erro inesperado em {}", request.requestURI, ex)
+        return ResponseEntity.internalServerError().body(
             ApiError(
                 status = 500,
                 error = "Internal Server Error",
@@ -62,4 +66,5 @@ class ApiExceptionHandler {
                 path = request.requestURI
             )
         )
+    }
 }

@@ -31,3 +31,7 @@ security:
   jwt:
     issuer: print-pricing-api
     secret: print-pricing-secret-key-change-in-production-32chars
+
+users:
+  confirmation-code:
+    expiration-minutes: 5

@@ -36,7 +36,7 @@ class SecurityConfig(
             .headers { it.frameOptions { fo -> fo.disable() } }
             .authorizeHttpRequests { requests ->
                 requests
-                    .requestMatchers("/users", "/users/login").permitAll()
+                    .requestMatchers("/users", "/users/login", "/users/confirm").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     .anyRequest().authenticated()
